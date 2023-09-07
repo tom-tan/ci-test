@@ -67,5 +67,38 @@ Git のコミット署名周りや Github Actions でのコンテナ作成に関
   - ポリシー上 latest タグしか提供していない
     - 「タグ固定して古いのを使うな。セキュリティのために常に latest を使え」という方針
 - 鍵を使って署名する場合、秘密鍵をどうやって Actions に渡す？
-  - Secrets などに設定はできるが…
+  - [Secrets](https://docs.github.com/ja/actions/security-guides/using-secrets-in-github-actions) などに設定はできるが…
   - cosign と同様に OIDC token を使う方法を採用できるか？
+
+---
+# 開発者がコミットを作成・Github に push したときに何が起きるのか
+- リポジトリの開発者は、GPG, SSH, X509 のいずれかの鍵を用いて[署名付きコミット](https://docs.github.com/ja/authentication/managing-commit-signature-verification/signing-commits)を行う
+  - 署名付きコミットにより、コミットが第三者によるものではないことを検証可能にできる
+- 開発者はコミットを Github に push する
+- リポジトリへの push をトリガーにして Github Actions (Github 提供の CI/CD の機構) が実行される
+  - push 以外をトリガーにした Actions 実行も存在するが、今回は省略
+  - Github Actions の実行は [Github hosted runner](https://docs.github.com/ja/actions/using-github-hosted-runners/about-github-hosted-runners) と [self hosted runner](https://docs.github.com/ja/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners) のいずれかで行われる
+    - runner の管理者についてはきちんと前提を置く必要がある
+- Github Actions はコミットに含まれる設定ファイルに従って、ソースからバイナリ (or コンテナ) へのビルドおよび生成されたバイナリのバイナリリポジトリへのアップロードを行う
+  - 例: [ocker-publish.yml](https://github.com/tom-tan/ci-test/blob/main/.github/workflows/docker-publish.yml)
+  - 設定ファイルは本質的には bash スクリプト列
+    - [PowerShell なども利用可能](https://docs.github.com/ja/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell)だがめったに見ない
+    - 第三者が作成した設定ファイル (Actions と呼ばれる) を活用する場合もある
+      - [Actions の内容はリポジトリとして公開されている](https://docs.github.com/ja/actions/creating-actions/publishing-actions-in-github-marketplace#about-publishing-actions)ため確認は可能
+  - ビルド環境の構築 (e.g., コンパイラのデプロイ)、ビルド、バイナリへの署名およびバイナリと署名のアップロードを行うように設定ファイルに記述しておく必要がある
+    - [アップロード結果の例](https://github.com/tom-tan/ci-test/pkgs/container/ci-test)
+    - `*.sig` が署名に関する情報が含まれたファイル
+  - **ビルドログ中に、対応するリポジトリのコミット番号およびバイナリのハッシュ値(or コンテナイメージID)を出力するように設定ファイルを記述する必要がある**
+    - [ビルドログの例](https://github.com/tom-tan/ci-test/actions/runs/6099869999)
+    - Github 上のビルドログは一定期間 (デフォルトは三ヶ月) で消去されるので注意が必要
+
+---
+# ソースコードとバイナリの紐づけの確認方法・検証方法
+- コミットの検証方法は[前述](＃署名の確認)
+- バイナリの検証方法
+  - cosign の場合は `cosign verify` で行う (参考: https://tech.isid.co.jp/entry/verify-distroless-signature-using-cosign-on-github-actions)
+- 紐づけの確認方法
+  - 特定のコミットに紐づいたログを探す (例: https://github.com/tom-tan/ci-test/actions/runs/6099869999/job/16552977072#step:2:86)
+    - 一つのコミットに複数のログが対応する場合もあるが、成功した最新のログを確認すればよい
+  - ログ中で生成されたコンテナイメージ ID が、バイナリリポジトリにアップロードされたコンテナのイメージ ID と一致することを確認する
+    - [ログの例](https://github.com/tom-tan/ci-test/actions/runs/6099869999/job/16552977072#step:7:178)
