@@ -80,7 +80,7 @@ Git のコミット署名周りや Github Actions でのコンテナ作成に関
   - Github Actions の実行は [Github hosted runner](https://docs.github.com/ja/actions/using-github-hosted-runners/about-github-hosted-runners) と [self hosted runner](https://docs.github.com/ja/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners) のいずれかで行われる
     - runner の管理者についてはきちんと前提を置く必要がある
 - Github Actions はコミットに含まれる設定ファイルに従って、ソースからバイナリ (or コンテナ) へのビルドおよび生成されたバイナリのバイナリリポジトリへのアップロードを行う
-  - 例: [ocker-publish.yml](https://github.com/tom-tan/ci-test/blob/main/.github/workflows/docker-publish.yml)
+  - 例: [docker-publish.yml](https://github.com/tom-tan/ci-test/blob/main/.github/workflows/docker-publish.yml)
   - 設定ファイルは本質的には bash スクリプト列
     - [PowerShell なども利用可能](https://docs.github.com/ja/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell)だがめったに見ない
     - 第三者が作成した設定ファイル (Actions と呼ばれる) を活用する場合もある
