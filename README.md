@@ -94,7 +94,7 @@ Git のコミット署名周りや Github Actions でのコンテナ作成に関
 
 ---
 # ソースコードとバイナリの紐づけの確認方法・検証方法
-- コミットの検証方法は[前述](#署名の確認)
+- コミットの検証方法は[前述](#git-でコミット署名を行う手順)
 - バイナリの検証方法
   - cosign の場合は `cosign verify` で行う (参考: https://tech.isid.co.jp/entry/verify-distroless-signature-using-cosign-on-github-actions)
 - 紐づけの確認方法
